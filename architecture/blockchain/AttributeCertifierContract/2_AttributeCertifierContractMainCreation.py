@@ -1,12 +1,27 @@
 from AttributeCertifierContract import *
 from algosdk.atomic_transaction_composer import AtomicTransactionComposer
 import sys
-
-sys.path.insert(0, '../')
-from util import *
+from algosdk import account, transaction
+from decouple import config
+from algosdk.v2client import algod
+import base64
 
 # user declared account mnemonics
-creator_mnemonic = "infant flag husband illness gentle palace eye tilt large reopen current purity enemy depart couch moment gate transfer address diamond vital between unlock able cave"
+pk_attribute_certifier_1 = config('CERTIFIER_PRIVATEKEY1')
+pk_attribute_certifier_2 = config('CERTIFIER_PRIVATEKEY2')
+pk_attribute_certifier_3 = config('CERTIFIER_PRIVATEKEY3')
+pk_attribute_certifier_4 = config('CERTIFIER_PRIVATEKEY4')
+account_1 = account.address_from_private_key(pk_attribute_certifier_1)
+account_2 = account.address_from_private_key(pk_attribute_certifier_2)
+account_3 = account.address_from_private_key(pk_attribute_certifier_3)
+account_4 = account.address_from_private_key(pk_attribute_certifier_4)
+
+version = 1  # multisig version
+threshold = 2  # how many signatures are necessary
+msig = transaction.Multisig(version, threshold, [account_1, account_2])
+
+print("Multisig Address: ", msig.address())
+
 algod_address = "https://testnet-algorand.api.purestake.io/ps2"
 algod_token = "p8IwM35NPv3nRf0LLEquJ5tmpOtcC4he7KKnJ3wE"
 headers = {
@@ -14,9 +29,13 @@ headers = {
 }
 
 
+def compile_program(client, source_code):
+    compile_response = client.compile(source_code)
+    return base64.b64decode(compile_response["result"])
+
+
 def createApp(
-        algod_client: algod.AlgodClient,
-        senderSK: str,
+        algod_client: algod.AlgodClient
 ) -> int:
     local_ints = 0
     local_bytes = 0
@@ -27,8 +46,7 @@ def createApp(
 
     # Compile the program
     router = getRouter()
-    approval_program, clear_program, contract = router.compile_program(version=6,
-                                                                       optimize=OptimizeOptions(scratch_slots=True))
+    approval_program, clear_program, contract = router.compile_program(version=6)
 
     with open("attr_approval.teal", "w") as f:
         f.write(approval_program)
@@ -48,42 +66,91 @@ def createApp(
     print("--------------------------------------------")
     print("Deploying application......")
 
-    atc = AtomicTransactionComposer()
-    signer = AccountTransactionSigner(senderSK)
-    sp = algod_client.suggested_params()
+    # define sender as creator
+    sender = msig.address()
 
-    with open("attr_contract.json") as f:
-        js = f.read()
+    # declare on_complete as NoOp
+    on_complete = transaction.OnComplete.NoOpOC.real
 
-    atc.add_method_call(
-        app_id=0,
-        method=get_method("create_app", js),
-        sender=account.address_from_private_key(senderSK),
-        sp=sp,
-        signer=signer,
-        approval_program=approval_program_compiled,
-        clear_program=clear_state_program_compiled,
-        local_schema=local_schema,
-        global_schema=global_schema,
+    # get node suggested parameters
+    params = algod_client.suggested_params()
+
+    # create unsigned transaction
+    txn = transaction.ApplicationCreateTxn(
+        sender,
+        params,
+        on_complete,
+        approval_program_compiled,
+        clear_state_program_compiled,
+        global_schema,
+        local_schema,
     )
 
-    result = atc.execute(algod_client, 10)
-    app_id = transaction.wait_for_confirmation(algod_client, result.tx_ids[0])['application-index']
-    print("Transaction id:", result.tx_ids[0])
+    mtx = transaction.MultisigTransaction(txn, msig)
+    mtx.sign(pk_attribute_certifier_1)
+    mtx.sign(pk_attribute_certifier_2)
 
-    print("Global state:", read_global_state(algod_client, app_id))
+    # sign transaction
+    # signed_txn = txn.sign(private_key)
+    tx_id = mtx.transaction.get_txid()
 
-    assert app_id is not None and app_id > 0
-    return app_id, contract
+    # send transaction
+    algod_client.send_transactions([mtx])
+
+    # wait for confirmation
+    try:
+        transaction_response = transaction.wait_for_confirmation(algod_client, tx_id, 5)
+        print("TXID: ", tx_id)
+        print(
+            "Result confirmed in round: {}".format(
+                transaction_response["confirmed-round"]
+            )
+        )
+
+    except Exception as err:
+        print(err)
+        return
+
+    # display results
+    transaction_response = algod_client.pending_transaction_info(tx_id)
+    app_id = transaction_response["application-index"]
+    print("Created new app-id:", app_id)
+
+    return app_id
+
+
+def format_state(state):
+    formatted = {}
+    for item in state:
+        key = item["key"]
+        value = item["value"]
+        formatted_key = base64.b64decode(key).decode("utf-8")
+        if value["type"] == 1:
+            # byte string
+            if formatted_key == "voted":
+                formatted_value = base64.b64decode(value["bytes"]).decode("utf-8")
+            else:
+                formatted_value = value["bytes"]
+            formatted[formatted_key] = formatted_value
+        else:
+            # integer
+            formatted[formatted_key] = value["uint"]
+    return formatted
+
+
+def read_global_state(client, app_id):
+    app = client.application_info(app_id)
+    global_state = (
+        app["params"]["global-state"] if "global-state" in app["params"] else []
+    )
+    return format_state(global_state)
 
 
 def main():
-    sender_private_key = get_private_key_from_mnemonic(creator_mnemonic)
-
     algod_client = algod.AlgodClient(algod_token, algod_address, headers)
 
-    app_id, contract = createApp(algod_client, sender_private_key)
-    print('App id: ', app_id)
+    app_id = createApp(algod_client)
+    print("Global state:", read_global_state(algod_client, app_id))
 
 
 if __name__ == "__main__":

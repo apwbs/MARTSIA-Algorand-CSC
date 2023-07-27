@@ -5,12 +5,12 @@ import sys
 import base64
 from algosdk import account
 
-
 algod_address = "https://testnet-algorand.api.purestake.io/ps2"
 algod_token = "p8IwM35NPv3nRf0LLEquJ5tmpOtcC4he7KKnJ3wE"
 headers = {
     "X-API-Key": algod_token,
 }
+
 
 def get_method(name: str, js: str) -> Method:
     c = Contract.from_json(js)
@@ -18,6 +18,7 @@ def get_method(name: str, js: str) -> Method:
         if m.name == name:
             return m
     raise Exception("No method with the name {}".format(name))
+
 
 def format_state(state):
     formatted = {}
@@ -60,7 +61,7 @@ def saveData(
 
     with open("blockchain/Controlled/multisig/PublicKeysReadersContract/pk_readers_contract.json") as f:
         js = f.read()
-    
+
     atc.add_method_call(
         app_id=app_id,
         method=get_method('on_save', js),
@@ -92,4 +93,3 @@ def main(params):
 
 if __name__ == "__main__":
     main(sys.argv)
-    

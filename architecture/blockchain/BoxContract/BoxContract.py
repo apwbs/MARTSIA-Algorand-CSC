@@ -1,10 +1,13 @@
 import json
 from pyteal import *
+
 pragma(compiler_version="^0.25.0")
 CONTRACT_VERSION = 8
 
+
 class LocalInts:
     approved_key = Bytes("approved")
+
 
 class LocalState(LocalInts):
     @staticmethod
@@ -28,8 +31,9 @@ router = Router(
         delete_application=OnCompleteAction.always(Reject()),
         close_out=OnCompleteAction.never(),
         opt_in=OnCompleteAction(action=Approve(), call_config=CallConfig.CALL),
-        ),
-    )
+    ),
+)
+
 
 @router.method(no_op=CallConfig.CALL)
 def approveAuthority(account: abi.Account) -> Expr:

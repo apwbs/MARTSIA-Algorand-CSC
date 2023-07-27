@@ -4,8 +4,10 @@ from pyteal import *
 reader_address = Bytes("readerAddress")
 pk_reader_ipfs_link = Bytes("pk_ipfs_link")
 
+
 class LocalInts:
     approved_key = Bytes("approved")
+
 
 class LocalState(LocalInts):
     @staticmethod
@@ -17,12 +19,13 @@ class LocalState(LocalInts):
         return StateSchema(
             num_uints=cls.num_uints(),
         )
-    
+
+
 handle_creation = Seq(
-      App.globalPut(reader_address, Global.zero_address()),
-      App.globalPut(pk_reader_ipfs_link, Int(0)), 
-      Approve(),
-    )
+    App.globalPut(reader_address, Global.zero_address()),
+    App.globalPut(pk_reader_ipfs_link, Int(0)),
+    Approve(),
+)
 
 
 def getRouter():
@@ -46,7 +49,7 @@ def getRouter():
             App.localPut(account.address(), LocalState.approved_key, Int(3)),
             Approve()
         )
-    
+
     @router.method(no_op=CallConfig.CALL)
     def revokeReader(account: abi.Account) -> Expr:
         return Seq(
@@ -69,4 +72,3 @@ def getRouter():
         )
 
     return router
-    

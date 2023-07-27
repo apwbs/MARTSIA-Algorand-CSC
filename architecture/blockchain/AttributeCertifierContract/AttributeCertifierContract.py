@@ -2,22 +2,6 @@ from algosdk.atomic_transaction_composer import *
 from pyteal import *
 
 
-class LocalInts:
-    approved_key = Bytes("approved")
-
-
-class LocalState(LocalInts):
-    @staticmethod
-    def num_uints():
-        return len(static_attrs(LocalInts))
-
-    @classmethod
-    def schema(cls):
-        return StateSchema(
-            num_uints=cls.num_uints(),
-        )
-
-
 processID = Bytes("process_id")
 IPFSLink = Bytes("ipfs_link")
 
@@ -36,13 +20,15 @@ def getRouter():
             update_application=OnCompleteAction.always(Reject()),
             delete_application=OnCompleteAction.always(Reject()),
             close_out=OnCompleteAction.never(),
-            opt_in=OnCompleteAction(action=Approve(), call_config=CallConfig.CALL),
         ),
     )
 
     @router.method(no_op=CallConfig.CALL)
     def on_save(process_id: abi.String, ipfs_link: abi.String) -> Expr:
         return Seq(
+            Assert(
+                Txn.sender() == Global.creator_address(),
+            ),
             App.globalPut(processID, process_id.get()),
             App.globalPut(IPFSLink, ipfs_link.get()),
         )
