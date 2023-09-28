@@ -2,21 +2,16 @@ import MessageContract
 from algosdk import account, transaction
 from algosdk.v2client import algod
 import base64
-from decouple import config
 
-pk_attribute_certifier_1 = config('CERTIFIER_PRIVATEKEY1')
-pk_attribute_certifier_2 = config('CERTIFIER_PRIVATEKEY2')
-pk_attribute_certifier_3 = config('CERTIFIER_PRIVATEKEY3')
-pk_attribute_certifier_4 = config('CERTIFIER_PRIVATEKEY4')
-# private_key_1 = "VZtHXj4T2DT2atlThLRuOgPE0n+bj9sO6e/6STgm3Nqrr3giY49gyUtq/fJ5mIPp9S8clJfgy2QhgnBkybRvrg=="
-# private_key_2 = "v1NEi7llgXaH66aofgHv+/8RW3MsOUmqneWc/Tm97n+IsGQHQS4zOZ6l+p9ezvUDMdxxmmua9TIPXeVfdLjhwg=="
-# private_key_3 = "nOewRj9MCGANg7oSlpqc6YO+2zl+2SBzp70/W4MlEka9EUkqdHXusgjGprC0u2C3A3HgBeP1AolBuxzUnlwYmw=="
-# private_key_4 = "9Qekcr0Ba5DV3gm9XrH267zy3xElYlAvv8QArpgEqfMzVNyMgn1/ZBIAuHNkZXusBB3GPeufTH5Z8vNiFvHGog=="
+private_key_1 = ""
+private_key_2 = ""
+private_key_3 = ""
+private_key_4 = ""
 
-account_1 = account.address_from_private_key(pk_attribute_certifier_1)
-account_2 = account.address_from_private_key(pk_attribute_certifier_2)
-account_3 = account.address_from_private_key(pk_attribute_certifier_3)
-account_4 = account.address_from_private_key(pk_attribute_certifier_4)
+account_1 = account.address_from_private_key(private_key_1)
+account_2 = account.address_from_private_key(private_key_2)
+account_3 = account.address_from_private_key(private_key_3)
+account_4 = account.address_from_private_key(private_key_4)
 
 version = 1  # multisig version
 threshold = 2  # how many signatures are necessary
@@ -30,7 +25,6 @@ algod_token = "p8IwM35NPv3nRf0LLEquJ5tmpOtcC4he7KKnJ3wE"
 headers = {
     "X-API-Key": algod_token,
 }
-
 
 def compile_program(client, source_code):
     compile_response = client.compile(source_code)
@@ -87,8 +81,8 @@ def createApp(client):
     )
 
     mtx = transaction.MultisigTransaction(txn, msig)
-    mtx.sign(pk_attribute_certifier_1)
-    mtx.sign(pk_attribute_certifier_2)
+    mtx.sign(private_key_1)
+    mtx.sign(private_key_2)
 
     # sign transaction
     # signed_txn = txn.sign(private_key)
@@ -136,7 +130,6 @@ def format_state(state):
             # integer
             formatted[formatted_key] = value["uint"]
     return formatted
-
 
 def read_global_state(client, app_id):
     app = client.application_info(app_id)

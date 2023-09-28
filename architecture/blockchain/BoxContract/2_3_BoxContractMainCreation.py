@@ -7,18 +7,17 @@ from algosdk import mnemonic
 from algosdk.encoding import decode_address, encode_address
 import sys
 from algosdk.v2client import indexer
-from decouple import config
 
 
-pk_attribute_certifier_1 = config('CERTIFIER_PRIVATEKEY1')
-pk_attribute_certifier_2 = config('CERTIFIER_PRIVATEKEY2')
-pk_attribute_certifier_3 = config('CERTIFIER_PRIVATEKEY3')
-pk_attribute_certifier_4 = config('CERTIFIER_PRIVATEKEY4')
+private_key_1 = ""
+private_key_2 = ""
+private_key_3 = ""
+private_key_4 = ""
 
-account_1 = account.address_from_private_key(pk_attribute_certifier_1)
-account_2 = account.address_from_private_key(pk_attribute_certifier_2)
-account_3 = account.address_from_private_key(pk_attribute_certifier_3)
-account_4 = account.address_from_private_key(pk_attribute_certifier_4)
+account_1 = account.address_from_private_key(private_key_1)
+account_2 = account.address_from_private_key(private_key_2)
+account_3 = account.address_from_private_key(private_key_3)
+account_4 = account.address_from_private_key(private_key_4)
 
 version = 1  # multisig version
 threshold = 2  # how many signatures are necessary
@@ -82,8 +81,8 @@ def create_test_app() -> int:
     )
 
     mtx = transaction.MultisigTransaction(txn, msig)
-    mtx.sign(pk_attribute_certifier_1)
-    mtx.sign(pk_attribute_certifier_2)
+    mtx.sign(private_key_1)
+    mtx.sign(private_key_2)
     tx_id = mtx.transaction.get_txid()
 
     # send transaction
@@ -124,8 +123,8 @@ def fund_program(app_id: int):
     )
 
     mtx = transaction.MultisigTransaction(txn, msig)
-    mtx.sign(pk_attribute_certifier_1)
-    mtx.sign(pk_attribute_certifier_2)
+    mtx.sign(private_key_1)
+    mtx.sign(private_key_2)
     tx_id = mtx.transaction.get_txid()
 
     # send transaction
@@ -138,9 +137,10 @@ if __name__ == "__main__":
     ###1st run###
     #############
     # app_id = create_test_app()
+    # print(app_id)
 
     #############
     ###2nd run###
     #############
-    app_id = 264486342
+    app_id = 239796376
     fund_program(app_id)
