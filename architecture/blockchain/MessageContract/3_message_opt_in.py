@@ -1,6 +1,5 @@
 from algosdk.atomic_transaction_composer import *
 from pyteal import *
-from decouple import config
 
 algod_address = "https://testnet-algorand.api.purestake.io/ps2"
 algod_token = "p8IwM35NPv3nRf0LLEquJ5tmpOtcC4he7KKnJ3wE"
@@ -8,17 +7,15 @@ headers = {
     "X-API-Key": algod_token,
 }
 
-DATAOWNER_ADDRESS = config('DATAOWNER_ADDRESS')
-DATAOWNER_PRIVATEKEY = config('DATAOWNER_PRIVATEKEY')
-APP_ID = config('APPLICATION_ID_MESSAGES')
-
+DATAOWNER_ADDRESS='SVCAKVYOAWOUKTB4YK3DQH2SCEMAKZ3OVLXIBUANDMJNOI7COXUO34NWG4'
+DATAOWNER_PRIVATEKEY='8iTtNZ9wCphZUYjQrE8r3SHcSDb7r6xBr0Gn9Avm4UCVRAVXDgWdRUw8wrY4H1IRGAVnbqrugNANGxLXI+J16A=='
 
 def main():
     algod_client = algod.AlgodClient(algod_token, algod_address, headers)
 
-    address = DATAOWNER_ADDRESS
-    private_key = DATAOWNER_PRIVATEKEY
-    app_id = APP_ID
+    address=DATAOWNER_ADDRESS
+    private_key=DATAOWNER_PRIVATEKEY
+    app_id=239586147
 
     txn = transaction.ApplicationOptInTxn(
         sender=address,

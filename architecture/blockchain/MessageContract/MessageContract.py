@@ -4,10 +4,8 @@ from pyteal import *
 messageID = Bytes("msg_id")
 IPFSLink = Bytes("ipfs_link")
 
-
 class LocalInts:
     approved_key = Bytes("approved")
-
 
 class LocalState(LocalInts):
     @staticmethod
@@ -19,13 +17,12 @@ class LocalState(LocalInts):
         return StateSchema(
             num_uints=cls.num_uints(),
         )
-
-
+    
 handle_creation = Seq(
-    App.globalPut(messageID, Int(0)),
-    App.globalPut(IPFSLink, Int(0)),
-    Approve(),
-)
+      App.globalPut(messageID, Int(0)),
+      App.globalPut(IPFSLink, Int(0)), 
+      Approve(),
+    )
 
 
 def getRouter():
@@ -49,6 +46,7 @@ def getRouter():
             App.localPut(account.address(), LocalState.approved_key, Int(2)),
             Approve()
         )
+    
 
     @router.method(no_op=CallConfig.CALL)
     def revokeDataOwner(account: abi.Account) -> Expr:
@@ -60,6 +58,7 @@ def getRouter():
             App.localPut(account.address(), LocalState.approved_key, Int(0)),
             Approve()
         )
+
 
     @router.method(no_op=CallConfig.CALL)
     def on_save(message_id: abi.String, ipfs_link: abi.String) -> Expr:

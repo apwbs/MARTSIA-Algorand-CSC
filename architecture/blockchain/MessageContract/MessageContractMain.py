@@ -11,14 +11,12 @@ headers = {
     "X-API-Key": algod_token,
 }
 
-
 def get_method(name: str, js: str) -> Method:
     c = Contract.from_json(js)
     for m in c.methods:
         if m.name == name:
             return m
     raise Exception("No method with the name {}".format(name))
-
 
 def format_state(state):
     formatted = {}
