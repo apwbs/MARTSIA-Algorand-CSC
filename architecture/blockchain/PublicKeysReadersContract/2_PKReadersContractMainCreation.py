@@ -2,17 +2,16 @@ import PKReadersContract
 from algosdk import account, transaction
 from algosdk.v2client import algod
 import base64
-from decouple import config
 
-pk_attribute_certifier_1 = config('CERTIFIER_PRIVATEKEY1')
-pk_attribute_certifier_2 = config('CERTIFIER_PRIVATEKEY2')
-pk_attribute_certifier_3 = config('CERTIFIER_PRIVATEKEY3')
-pk_attribute_certifier_4 = config('CERTIFIER_PRIVATEKEY4')
+private_key_1 = ""
+private_key_2 = ""
+private_key_3 = ""
+private_key_4 = ""
 
-account_1 = account.address_from_private_key(pk_attribute_certifier_1)
-account_2 = account.address_from_private_key(pk_attribute_certifier_2)
-account_3 = account.address_from_private_key(pk_attribute_certifier_3)
-account_4 = account.address_from_private_key(pk_attribute_certifier_4)
+account_1 = account.address_from_private_key(private_key_1)
+account_2 = account.address_from_private_key(private_key_2)
+account_3 = account.address_from_private_key(private_key_3)
+account_4 = account.address_from_private_key(private_key_4)
 
 version = 1  # multisig version
 threshold = 2  # how many signatures are necessary
@@ -26,7 +25,6 @@ algod_token = "p8IwM35NPv3nRf0LLEquJ5tmpOtcC4he7KKnJ3wE"
 headers = {
     "X-API-Key": algod_token,
 }
-
 
 def compile_program(client, source_code):
     compile_response = client.compile(source_code)
@@ -81,8 +79,8 @@ def createApp(client: algod.AlgodClient) -> int:
     )
 
     mtx = transaction.MultisigTransaction(txn, msig)
-    mtx.sign(pk_attribute_certifier_1)
-    mtx.sign(pk_attribute_certifier_2)
+    mtx.sign(private_key_1)
+    mtx.sign(private_key_2)
 
     # sign transaction
     # signed_txn = txn.sign(private_key)
@@ -131,7 +129,6 @@ def format_state(state):
             formatted[formatted_key] = value["uint"]
     return formatted
 
-
 def read_global_state(client, app_id):
     app = client.application_info(app_id)
     global_state = (
@@ -146,6 +143,6 @@ def main():
     app_id = createApp(algod_client)
     print("Global state:", read_global_state(algod_client, app_id))
 
-
 if __name__ == "__main__":
     main()
+    
